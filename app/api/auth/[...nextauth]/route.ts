@@ -15,8 +15,8 @@ export const authOptions: AuthOptions = {
       clientSecret: process.env.GITHUB_SECRET as string,
     }),
     GoogleProvider({
-      clientId: process.env.GOOGLE_ID as string,
-      clientSecret: process.env.GOOGLE_SECRET as string,
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     }),
     CredentialsProvider({
       name: "credentials",
@@ -26,21 +26,28 @@ export const authOptions: AuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Invalid Credentials");
+          throw new Error("Invalid credentials");
         }
+
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: {
+            email: credentials.email,
+          },
         });
+
         if (!user || !user?.hashedPassword) {
-          throw new Error("Invalid Credentials");
+          throw new Error("Invalid credentials");
         }
-        const isCorrect = await bcrypt.compare(
+
+        const isCorrectPassword = await bcrypt.compare(
           credentials.password,
           user.hashedPassword
         );
-        if (!isCorrect) {
-          throw new Error("Invalid Credentials");
+
+        if (!isCorrectPassword) {
+          throw new Error("Invalid credentials");
         }
+
         return user;
       },
     }),
